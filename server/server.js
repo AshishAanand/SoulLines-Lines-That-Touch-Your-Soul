@@ -4,6 +4,9 @@ import path from "path";
 import cors from 'cors';
 import {connectDB} from "./src/configs/db.configs.js";
 
+import quoteRoutes from "./src/routes/quote.routes.js";
+
+
 dotenv.config();
 
 // Initialize Express app
@@ -28,12 +31,9 @@ app.use(cors(
 ));
 
 
-
 // ############################## ( Routes ) ###################################
 
-app.get("/", (req, res) => {
-  res.send("Hello, World!");
-});
+app.use("/api/quotes", quoteRoutes);
 
 // ############################## ( Error Handling ) ###########################
 
