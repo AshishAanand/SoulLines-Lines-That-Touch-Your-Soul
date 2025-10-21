@@ -2,12 +2,21 @@ import express from "express";
 import dotenv from "dotenv";
 import path from "path";
 import cors from 'cors';
+import {connectDB} from "./src/configs/db.configs.js";
 
 dotenv.config();
 
 // Initialize Express app
 const app = express();
 
+// Connection to Database
+
+connectDB().then(() => {
+    console.log("Database connection established");
+}).catch((error) => {
+    console.error("Database connection failed:", error);
+    process.exit(1);
+});
 
 
 // ############################## ( Middlewares ) ##############################
