@@ -4,7 +4,10 @@ import path from "path";
 import cors from 'cors';
 import {connectDB} from "./src/configs/db.configs.js";
 
+
+// ############################### ( Importing Routes ) ##############################
 import quoteRoutes from "./src/routes/quote.routes.js";
+import userRoutes from './src/routes/user.routes.js';
 
 
 dotenv.config();
@@ -33,7 +36,8 @@ app.use(cors(
 
 // ############################## ( Routes ) ###################################
 
-app.use("/api/quotes", quoteRoutes);
+app.use("/api/quotes", quoteRoutes); // for quote-related routes
+app.use("/api/users", userRoutes);   // for user-related routes
 
 // ############################## ( Error Handling ) ###########################
 
