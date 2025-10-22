@@ -7,7 +7,22 @@ const quoteSchema = new mongoose.Schema({
     },
     author: {
         type: String, default: "Anonymous"
-    }
+    },
+    tags: {
+        type: [String],
+        default: [],
+    },
+    likes: {
+        type: Number,
+        default: 0,
+    },
+    comments: [
+        {
+            text: String,
+            user: String,
+            date: { type: Date, default: Date.now},
+        },
+    ],
     
 }, {timestamps: true});
 

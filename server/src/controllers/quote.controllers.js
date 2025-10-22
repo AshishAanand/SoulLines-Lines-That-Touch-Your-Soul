@@ -83,4 +83,43 @@ const deleteQuoteById = async (req, res) => {
     }
 };
 
-export { getQuotes, createQuote, getQuoteById, deleteQuoteById };
+// @desc Like a quote by ID
+// @route POST /api/quotes/:id/like
+
+const likeQuote = async (req, res) => {
+    try {
+        const quote = await Quote.findById(req.params.id);
+        if (!quote) {
+            return res.status(404).json({ message: "Quote not found" });
+        }
+        quote.likes += 1;
+        await quote.save();
+        res.status(200).json({ message: "Quote liked successfully", quote: quote });
+    } catch (error) {
+        res.status(500).json({ message: "Server Error", error: error.message });
+    }
+};
+
+// @desc Comment on a quote by ID
+// @route POST /api/quotes/:id/comment
+
+const commentOnQuote = async (req, res) => {
+    try {
+        const { comment } = req.body;
+        if (!comment) {
+            return res.status(400).json({ message: "Comment is required" });
+        }
+        const quote = await Quote.findById(req.params.id);
+        if (!quote) {
+            return res.status(404).json({ message: "Quote not found" });
+        }
+        quote.comments.push(comment);
+        await quote.save();
+        res.status(200).json({ message: "Comment added successfully", quote: quote });
+    } catch (error) {
+        res.status(500).json({ message: "Server Error", error: error.message });
+    }
+};
+
+
+export { getQuotes, createQuote, getQuoteById, deleteQuoteById, likeQuote, commentOnQuote };

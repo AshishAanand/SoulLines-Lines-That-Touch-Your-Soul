@@ -1,5 +1,6 @@
 import e from "express";
-import { getQuotes, getQuoteById, deleteQuoteById, createQuote } from "../controllers/quote.controllers.js";
+import protect from "../middleware/auth.middleware.js";
+import { getQuotes, getQuoteById, deleteQuoteById, createQuote, likeQuote, commentOnQuote } from "../controllers/quote.controllers.js";
 
 const quoteRoutes = e.Router();
 
@@ -14,5 +15,11 @@ quoteRoutes
     .route("/:id")
     .get(getQuoteById)
     .delete(deleteQuoteById);
+
+// Like a quote
+quoteRoutes.put("/:id/like", protect, likeQuote);
+
+// Comment on a quote
+quoteRoutes.post("/:id/comment", protect, commentOnQuote);
 
 export default quoteRoutes;
