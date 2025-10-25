@@ -1,28 +1,31 @@
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 
-const userSchema = new mongoose.Schema({
 
+const userSchema = new mongoose.Schema(
+  {
     username: {
-        type: String,
-        required: [true, "Username is required"],
-        trim: true,
-        unique: true,
+      type: String,
+      required: [true, "Username is required"],
+      trim: true,
+      unique: true,
     },
-
     email: {
-        type: String,
-        required: [true, "Email is required"],
-        unique: true,
-        lowercase: true,
+      type: String,
+      required: [true, "Email is required"],
+      unique: true,
+      lowercase: true,
+      match: [/^\S+@\S+\.\S+$/, "Please enter a valid email address"],
     },
-
     password: {
-        type: String,
-        required: [true, "Password is required"],
-        minlength: [6, "Password must be at least 6 characters long"],
+      type: String,
+      required: [true, "Password is required"],
+      minlength: [6, "Password must be at least 6 characters long"],
+      select: false, // <— best practice for security
     },
-}, { timestamps: true });
+  },
+  { timestamps: true }
+);
 
 // Encrypt password before saving
 

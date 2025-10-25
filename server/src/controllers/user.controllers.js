@@ -1,90 +1,152 @@
+import jwt from 'jsonwebtoken';
 import User from '../models/user.model.js';
+import cookieParser from 'cookie-parser';
 import generateToken from '../utils/generateToken.js';
+import TokenBlacklist from '../models/tokenBlackList.model.js';
 
-//  @desc Register a new user
-//  @route POST /api/users/register
-
+/**
+ * @desc Register a new user
+ * @route POST /api/users/register
+ * @access Public
+ */
 const registerUser = async (req, res) => {
     try {
-
         const { username, email, password } = req.body;
 
-        // Check if user already exists
-        const existingUser = await User.findOne({ email });
-        if (existingUser) {
-            return res.status(400).json({ message: 'User already exists', status: 400 });
+        // Basic validation
+        if (!username || !email || !password) {
+            return res.status(400).json({ message: 'All fields are required' });
         }
 
-        // Create new user
-        const newUser = new User({ username, email, password });
+        // Check for existing user
+        const existingUser = await User.findOne({ email });
+        if (existingUser) {
+            return res.status(409).json({ message: 'User already exists' }); // 409 = conflict
+        }
 
-        // generate token
+        // Create user (password hashing handled in model pre-save middleware)
+        const newUser = await User.create({ username, email, password });
 
-        if (newUser) {
-            res.status(201).json({
+        await newUser.save();
+
+        // Respond with token and user details
+        res.status(201).json({
+            message: 'User registered successfully',
+            user: {
                 _id: newUser._id,
                 username: newUser.username,
                 email: newUser.email,
                 token: generateToken(newUser._id),
-            });
-        } else {
-            res.status(400).json({ message: 'Invalid user data', status: 400 });
-        }
-
-        await newUser.save();
-
-        res.status(201).json({ message: 'User registered successfully', user: newUser, status: 201 });
+            },
+        });
 
     } catch (error) {
-        res.status(500).json({ message: 'Server Error', error: error.message, status: 500 });
+        console.error('Register Error:', error);
+        res.status(500).json({ message: 'Internal Server Error' });
     }
 };
 
-// @desc Login user & get token
-// @route POST /api/users/login
-
+/**
+ * @desc Login user & get token
+ * @route POST /api/users/login
+ * @access Public
+ */
 const loginUser = async (req, res) => {
     try {
-
         const { email, password } = req.body;
 
-        // Find user by email
-        const user = await User.findOne({ email });
+        // Validate input
+        if (!email || !password) {
+            return res.status(400).json({ message: 'Email and password are required' });
+        }
 
-        if (user && (await user.matchPassword(password))) {
-            res.json({
+        const user = await User.findOne({ email: email.toLowerCase() }).select('+password');
+
+        console.log("User found during login:", user); // return null ( This is the issue )
+        if (!user) {
+            return res.status(401).json({ message: 'Invalid email or password' });
+        }
+
+        // Match password
+        const isMatch = await user.matchPassword(password);
+        if (!isMatch) {
+            return res.status(401).json({ message: 'Invalid email or password' });
+        }
+
+        const token = generateToken(user._id);
+
+        // Success response
+        res.status(200).json({
+            message: 'Login successful',
+            user: {
                 _id: user._id,
                 username: user.username,
                 email: user.email,
-                token: generateToken(user._id),
-            });
-        } else {
-            res.status(401).json({ message: 'Invalid email or password', status: 401 });
-        }
+                token: token,
+            },
+        });
+
+        res.cookie('token', token, {
+            httpOnly: true, // Prevents client-side JavaScript from accessing the cookie
+            secure: process.env.NODE_ENV === 'production', // Send cookie only over HTTPS in production
+            maxAge: 3600000, // Cookie expiration in milliseconds (e.g., 1 hour)
+            sameSite: 'Lax' // Or 'Strict' or 'None' depending on your requirements
+        });
+
 
     } catch (error) {
-        res.status(500).json({ message: 'Server Error', error: error.message, status: 500 });
+        console.error('Login Error:', error);
+        res.status(500).json({ message: 'Internal Server Error' });
     }
 };
 
-
-// @desc Get user profile ( protected route )
-// @route GET /api/users/profile
-
+/**
+ * @desc Get user profile (Protected)
+ * @route GET /api/users/profile
+ * @access Private
+ */
 const getUserProfile = async (req, res) => {
     try {
-
         const user = await User.findById(req.user._id).select('-password');
-
-        if (user) {
-            res.status(200).json(user);
-        } else {
-            res.status(404).json({ message: 'User not found', status: 404 });
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
         }
 
+        res.status(200).json(user);
     } catch (error) {
-        res.status(500).json({ message: 'Server Error', error: error.message, status: 500 });
+        console.error('Profile Error:', error);
+        res.status(500).json({ message: 'Internal Server Error' });
     }
 };
 
-export { registerUser, loginUser, getUserProfile };
+const logoutUser = async (req, res) => {
+    try {
+        const authHeader = req.headers.authorization;
+
+        if (!authHeader || !authHeader.startsWith("Bearer ")) {
+            return res.status(400).json({ message: "No token provided", status: 400 });
+        }
+
+        const token = authHeader.split(" ")[1];
+
+        // Store the token in the blacklist
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        if (!decoded || !decoded.exp) {
+            return res.status(400).json({ message: "Invalid token", status: 400 });
+        }
+
+        const expiry = new Date(decoded.exp * 1000);
+
+        await TokenBlacklist.create({
+            token,
+            expiresAt: expiry,
+        });
+
+        res.status(200).json({ message: "User logged out successfully", status: 200 });
+    } catch (error) {
+        console.error("Logout Error:", error.message);
+        res.status(500).json({ message: "Server Error", error: error.message, status: 500 });
+    }
+};
+
+export { registerUser, loginUser, getUserProfile, logoutUser };

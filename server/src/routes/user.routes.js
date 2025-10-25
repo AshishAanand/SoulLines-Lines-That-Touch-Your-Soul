@@ -1,6 +1,6 @@
 import express from 'express';
-import { registerUser, loginUser, getUserProfile } from '../controllers/user.controllers.js';
-import  { protect } from '../middlewares/auth.middleware.js';
+import  protect from '../middlewares/auth.middleware.js';
+import { registerUser, loginUser, getUserProfile, logoutUser } from '../controllers/user.controllers.js';
 
 // Initialize router
 const router = express.Router();
@@ -10,6 +10,8 @@ router.post('/register', registerUser);
 // User login route
 router.post('/login', loginUser);
 // User profile route (protected)
-router.get('/profile', protect, getUserProfile);
+router.get('/me', protect, getUserProfile);
+// User logout route (protected)
+router.post('/logout', protect, logoutUser);
 
 export default router;

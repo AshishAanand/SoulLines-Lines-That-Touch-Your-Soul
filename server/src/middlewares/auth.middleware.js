@@ -1,7 +1,8 @@
 import jwt from 'jsonwebtoken';
 import User from '../models/user.model.js';
+import TokenBlacklist from '../models/tokenBlackList.model.js';
 
-export const protect = async (req, res, next) => {
+const protect = async (req, res, next) => {
 
     let token;
 
@@ -13,11 +14,18 @@ export const protect = async (req, res, next) => {
 
             token = req.headers.authorization.split(' ')[1];
 
+            // Check if token is blacklisted
+            const blacklisted = await TokenBlacklist.findOne({ token });
+            if (blacklisted) {
+                return res.status(401).json({ message: "Token has been revoked", status: 401 });
+            }
+
             // Verify token
             const decoded = jwt.verify(token, process.env.JWT_SECRET);
             // Get user from the token
+
             req.user = await User.findById(decoded.id).select('-password');
-            
+
             next();
 
         } catch (error) {
@@ -30,3 +38,5 @@ export const protect = async (req, res, next) => {
     }
 
 };
+
+export default protect;

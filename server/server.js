@@ -2,6 +2,7 @@ import express from "express";
 import dotenv from "dotenv";
 import path from "path";
 import cors from 'cors';
+import cookieParser from "cookie-parser";
 import {connectDB} from "./src/configs/db.configs.js";
 
 
@@ -32,6 +33,7 @@ app.use(express.json());
 app.use(cors(
     { origin: '*' }
 ));
+app.use(cookieParser());
 
 
 // ############################## ( Routes ) ###################################
