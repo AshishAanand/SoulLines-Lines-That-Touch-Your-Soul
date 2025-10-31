@@ -2,7 +2,7 @@ import jwt from 'jsonwebtoken';
 import User from '../models/User.model.js';
 import cookieParser from 'cookie-parser';
 import generateToken from '../utils/generateToken.js';
-import TokenBlacklist from '../models/tokenBlackList.model.js';
+import TokenBlacklist from '../models/tokenBlacklist.model.js';
 
 /**
  * @desc Register a new user
