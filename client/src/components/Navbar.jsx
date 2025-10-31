@@ -30,7 +30,7 @@ const Navbar = () => {
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 flex-shrink-0">
             <div>
-              <img src="../../public/SoulLines-Logo.png" alt="SoulLines Logo" width={32} height={32}/>
+              <img src="/SoulLines-Logo.png" alt="SoulLines Logo" width={32} height={32}/>
             </div>
             <span className="font-serif font-bold text-lg text-foreground hidden sm:inline">SoulLines</span>
           </Link>

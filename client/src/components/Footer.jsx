@@ -15,7 +15,7 @@ const Footer = () => {
           <div className="md:col-span-1">
             <div className="flex items-center gap-2 mb-4">
               <div>
-                <img src="../../public/SoulLines-Logo.png" alt="SoulLines Logo" width={32} height={32}/>
+                <img src="/SoulLines-Logo.png" alt="SoulLines Logo" width={32} height={32}/>
               </div>
               <span className="font-serif font-bold text-foreground">SoulLines</span>
             </div>
