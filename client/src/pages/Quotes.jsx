@@ -42,13 +42,14 @@ const Quotes = () => {
       <div className="max-w-2xl mx-auto px-4 py-12 sm:py-20">
         {/* Header */}
         <div className="mb-12 text-center">
-          <h1 className="font-serif text-4xl sm:text-5xl font-bold text-foreground mb-4">Quote Feed</h1>
+          <h1 className="font-serif text-4xl sm:text-5xl font-bold text-foreground mb-4">Words That Breathe</h1>
           <p className="text-muted-foreground text-lg">Discover quotes that resonate with your soul</p>
         </div>
 
         {/* Quotes List */}
         <div className="space-y-6">
           {quotes.map((quote) => (
+            console.log(quote),
             <QuoteCard
               key={quote._id}
               quote={quote}

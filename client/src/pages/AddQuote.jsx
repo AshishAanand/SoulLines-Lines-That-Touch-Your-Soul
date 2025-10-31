@@ -7,7 +7,7 @@ const AddQuote = () => {
   const [formData, setFormData] = useState({
     text: '',
     author: '',
-    tags: '',
+    tag: '',
   });
 
   const [status, setStatus] = useState({ loading: false, message: '', success: false });
@@ -28,7 +28,7 @@ const AddQuote = () => {
       const res = await API.post('api/quotes', {
         text: formData.text,
         author: formData.author,
-        tags: formData.tag,
+        tag: formData.tag,
       });
 
       if (res.status === 201 || res.status === 200) {
@@ -42,7 +42,7 @@ const AddQuote = () => {
         setFormData({
           text: '',
           author: '',
-          tags: '',
+          tag: '',
         });
 
         // Redirect after delay
@@ -81,7 +81,7 @@ const AddQuote = () => {
             <label className="block mb-2 text-sm font-semibold text-slate-700">Quote</label>
             <textarea
               name="text"
-              value={formData.quote}
+              value={formData.text}
               onChange={handleChange}
               className="w-full p-4 bg-white/60 border border-gray-200 rounded-2xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-300 transition backdrop-blur-md"
               rows="4"
@@ -112,8 +112,8 @@ const AddQuote = () => {
             <label className="block mb-2 text-sm font-semibold text-slate-700">Category</label>
             <div className="relative">
               <select
-                name="tags"
-                value={formData.category}
+                name="tag"
+                value={formData.tag}
                 onChange={handleChange}
                 className="w-full appearance-none p-3 pl-4 pr-10 bg-gradient-to-r from-white/80 to-indigo-50/80 border border-gray-200 rounded-2xl shadow-sm text-slate-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-300 transition duration-200 cursor-pointer backdrop-blur-md"
                 required

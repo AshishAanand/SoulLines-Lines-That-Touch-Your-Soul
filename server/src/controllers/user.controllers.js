@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken';
-import User from '../models/user.model.js';
+import User from '../models/User.model.js';
 import cookieParser from 'cookie-parser';
 import generateToken from '../utils/generateToken.js';
 import TokenBlacklist from '../models/tokenBlackList.model.js';
@@ -11,10 +11,10 @@ import TokenBlacklist from '../models/tokenBlackList.model.js';
  */
 const registerUser = async (req, res) => {
     try {
-        const { username, email, password } = req.body;
+        const { name, username, email, password } = req.body;
 
         // Basic validation
-        if (!username || !email || !password) {
+        if (!name || !username || !email || !password) {
             return res.status(400).json({ message: 'All fields are required' });
         }
 
@@ -25,7 +25,7 @@ const registerUser = async (req, res) => {
         }
 
         // Create user (password hashing handled in model pre-save middleware)
-        const newUser = await User.create({ username, email, password });
+        const newUser = await User.create({ name, username, email, password });
 
         await newUser.save();
 
@@ -34,6 +34,7 @@ const registerUser = async (req, res) => {
             message: 'User registered successfully',
             user: {
                 _id: newUser._id,
+                name: newUser.name,
                 username: newUser.username,
                 email: newUser.email,
                 token: generateToken(newUser._id),

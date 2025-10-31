@@ -6,7 +6,9 @@ import Quote from "../models/Quote.model.js";
 const getQuotes = async (req, res) => {
     try {
 
-        const quotes = await Quote.find().sort({ createdAt: -1 }); // Sort by newest first
+        const quotes = await Quote.find()
+      .populate("user", "name username")
+      .sort({ createdAt: -1 });
 
         if (quotes.length === 0) {
             return res.status(404).json({ message: "No quotes found" });
@@ -25,7 +27,7 @@ const createQuote = async (req, res) => {
 
     try {
 
-        const { text, author, tags } = req.body;
+        const { text, author, tag } = req.body;
         const userId = req.user._id; // Make sure this comes from auth middleware
 
 
@@ -52,7 +54,7 @@ const createQuote = async (req, res) => {
         const newQuote = await Quote.create({
             text,
             author,
-            tags,
+            tag,
             user: userId, // link the quote to logged-in user
         });
 
@@ -96,10 +98,6 @@ const getUserQuotes = async (req, res) => {
         // Mongoose's `find()` returns an empty array if no documents are found,
         // so checking `quotes.length === 0` is the correct way to handle this.
         if (quotes.length === 0) {
-            // It's a common practice to return a 200 OK with an empty array
-            // rather than a 404 Not Found, as the request was valid, but no
-            // resources were found for that user. Either is acceptable depending on
-            // your API's design philosophy.
             return res.status(200).json({ success: true, quotes: [] });
         }
 

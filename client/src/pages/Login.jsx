@@ -23,7 +23,7 @@ const Login = () => {
     try {
       setLoading(true);
       await login(form.email, form.password);
-      navigate("/"); // redirect to home on success
+      navigate("/feed"); // redirect to feed on success
     } catch (err) {
       alert(err.response?.data?.message || "Invalid credentials");
     } finally {

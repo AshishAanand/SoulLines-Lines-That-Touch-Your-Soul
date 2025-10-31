@@ -8,6 +8,7 @@ const Signup = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({
+    name: "",
     username: "",
     email: "",
     password: "",
@@ -16,15 +17,15 @@ const Signup = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!form.username || !form.email || !form.password) {
+    if (!form.name || !form.username || !form.email || !form.password) {
       alert("Please fill all fields");
       return;
     }
 
     try {
       setLoading(true);
-      await signup(form.username, form.email, form.password);
-      navigate("/"); // redirect to home after successful signup
+      await signup(form.name, form.username, form.email, form.password);
+      navigate("/feed"); // redirect to feed after successful signup
     } catch (err) {
       alert(err.response?.data?.message || "Signup failed");
     } finally {
@@ -47,6 +48,19 @@ const Signup = () => {
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-5">
+          {/* Name Field */}
+          <div>
+            <label className="block text-sm font-medium text-muted-foreground mb-1">
+              Full Name
+            </label>
+            <input
+              type="text"
+              placeholder="Enter your full name"
+              value={form.name}
+              onChange={(e) => setForm({ ...form, name: e.target.value })}
+              className="w-full px-4 py-2 bg-background border border-border rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all text-foreground"
+            />
+          </div>
           <div>
             <label className="block text-sm font-medium text-muted-foreground mb-1">
               Username

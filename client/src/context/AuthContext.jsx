@@ -7,8 +7,8 @@ export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
 
-    const signup = async (username, email, password) => {
-        const res = await API.post("/api/users/register", { username, email, password });
+    const signup = async (name, username, email, password) => {
+        const res = await API.post("/api/users/register", { name, username, email, password });
         console.log(res);
         const token = res.data.user.token;
         console.log(token);

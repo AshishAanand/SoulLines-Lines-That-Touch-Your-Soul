@@ -102,12 +102,6 @@ const About = () => {
               >
                 Browse Quotes
               </a>
-              <a
-                href="/categories"
-                className="inline-flex items-center justify-center px-8 py-3 border border-border rounded-full font-medium text-foreground hover:bg-muted/50 transition-colors"
-              >
-                Explore Categories
-              </a>
             </div>
           </section>
         </div>

@@ -14,8 +14,8 @@ const Footer = () => {
           {/* Brand Section */}
           <div className="md:col-span-1">
             <div className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 rounded-lg bg-linear-to-br from-primary to-accent flex items-center justify-center">
-                <span className="text-primary-foreground font-serif font-bold text-lg">S</span>
+              <div>
+                <img src="../../public/SoulLines-Logo.png" alt="SoulLines Logo" width={32} height={32}/>
               </div>
               <span className="font-serif font-bold text-foreground">SoulLines</span>
             </div>
@@ -34,12 +34,6 @@ const Footer = () => {
                 </Link>
               </li>
               <li>
-                {/* <Link
-                  href="/categories"
-                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  Categories
-                </Link> */}
               </li>
               <li>
                 <Link to="/about" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
@@ -75,12 +69,7 @@ const Footer = () => {
           <div>
             <h3 className="font-semibold text-foreground mb-4 text-sm">Connect</h3>
             <div className="flex gap-4">
-              {/* <a
-                href="#"
-                className="p-2 rounded-lg bg-muted hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors"
-              >
-                <Twitter className="w-4 h-4" />
-              </a> */}
+
               <a
                 href="https://github.com/AshishAanand"
                 className="p-2 rounded-lg bg-muted hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors"
