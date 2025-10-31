@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken';
-import User from '../models/user.model.js';
+import User from '../models/User.model.js';
 import TokenBlacklist from '../models/tokenBlackList.model.js';
 
 const protect = async (req, res, next) => {
