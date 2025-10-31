@@ -43,28 +43,6 @@ const Footer = () => {
             </ul>
           </div>
 
-          {/* Resources */}
-          <div>
-            <h3 className="font-semibold text-foreground mb-4 text-sm">Resources</h3>
-            <ul className="space-y-2">
-              <li>
-                <a href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                  Blog
-                </a>
-              </li>
-              <li>
-                <a href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                  Privacy Policy
-                </a>
-              </li>
-              <li>
-                <a href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                  Terms of Service
-                </a>
-              </li>
-            </ul>
-          </div>
-
           {/* Connect */}
           <div>
             <h3 className="font-semibold text-foreground mb-4 text-sm">Connect</h3>
