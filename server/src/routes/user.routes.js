@@ -1,6 +1,6 @@
 import express from 'express';
 import  protect from '../middlewares/auth.middleware.js';
-import { registerUser, loginUser, getUserProfile, logoutUser } from '../controllers/user.controllers.js';
+import { registerUser, loginUser, getUserProfile, logoutUser, followUser } from '../controllers/user.controllers.js';
 
 // Initialize router
 const router = express.Router();
@@ -13,5 +13,8 @@ router.post('/login', loginUser);
 router.get('/me', protect, getUserProfile);
 // User logout route (protected)
 router.post('/logout', protect, logoutUser);
+// Follow user route (protected)
+router.post('/follow/:id', protect, followUser);
+
 
 export default router;

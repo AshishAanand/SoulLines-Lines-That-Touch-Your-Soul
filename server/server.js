@@ -9,6 +9,7 @@ import {connectDB} from "./src/configs/db.configs.js";
 // ############################### ( Importing Routes ) ##############################
 import quoteRoutes from "./src/routes/quote.routes.js";
 import userRoutes from './src/routes/user.routes.js';
+import socialRoutes from './src/routes/social.routes.js';
 
 
 dotenv.config();
@@ -40,6 +41,12 @@ app.use(cookieParser());
 
 app.use("/api/quotes", quoteRoutes); // for quote-related routes
 app.use("/api/users", userRoutes);   // for user-related routes
+app.use("/api/social", socialRoutes); // for social interactions like likes, comments, follows
+
+// in server.js or any test route
+app.get("/api/test-secret", (req, res) => {
+  res.json({ jwtSecret: process.env.JWT_SECRET ? "✅ Loaded" : "❌ Missing" });
+});
 
 // ############################## ( Error Handling ) ###########################
 
