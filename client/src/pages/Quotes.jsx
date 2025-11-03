@@ -1,23 +1,21 @@
 import React, { useEffect, useState } from 'react';
-import API from '../services/api.js';
 import QuoteCard from '../components/QuoteCard.jsx';
+import API from '../services/api.js';
 
 const Quotes = () => {
   const [quotes, setQuotes] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [likedQuotes, setLikedQuotes] = useState([]);
 
-  const toggleLike = (id) => {
-    setLikedQuotes((prev) =>
-      prev.includes(id) ? prev.filter((q) => q !== id) : [...prev, id]
-    );
-  };
+  const userToken = localStorage.getItem("token");
+
 
   useEffect(() => {
+
+    // Fetch quotes from the API
     const fetchQuotes = async () => {
       try {
         const response = await API.get("api/quotes");
-        // ✅ FIX: access actual quotes array
+
         setQuotes(response.data.quotes || []);
       } catch (error) {
         console.error("Error fetching quotes:", error);
@@ -49,13 +47,7 @@ const Quotes = () => {
         {/* Quotes List */}
         <div className="space-y-6">
           {quotes.map((quote) => (
-            console.log(quote),
-            <QuoteCard
-              key={quote._id}
-              quote={quote}
-              isLiked={likedQuotes.includes(quote._id)}
-              onLike={() => toggleLike(quote._id)}
-            />
+            <QuoteCard key={quote._id} quote={quote} userToken={userToken} />
           ))}
         </div>
 

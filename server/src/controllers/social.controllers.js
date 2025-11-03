@@ -25,7 +25,7 @@ const toggleLike = async (req, res) => {
         await quote.save();
         res.status(200).json({
             message: alreadyLiked ? "Quote unliked" : "Quote liked",
-            likesCount: quote.likes.length,
+            likesCount: quote.likes.length, success: true
         });
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -47,7 +47,7 @@ const addComment = async (req, res) => {
         quote.comments.push({ user: userId, text });
         await quote.save();
 
-        res.status(201).json({ message: "Comment added", comments: quote.comments });
+        res.status(201).json({ message: "Comment added", comments: quote.comments, success: true });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -73,7 +73,7 @@ const deleteComment = async (req, res) => {
         comment.deleteOne();
         await quote.save();
 
-        res.status(200).json({ message: "Comment deleted" });
+        res.status(200).json({ message: "Comment deleted", success: true });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -110,7 +110,7 @@ const toggleFollow = async (req, res) => {
 
         res.status(200).json({
             message: alreadyFollowing ? "Unfollowed user" : "Followed user",
-            followersCount: targetUser.followers.length,
+            followersCount: targetUser.followers.length, success: true
         });
     } catch (err) {
         res.status(500).json({ error: err.message });

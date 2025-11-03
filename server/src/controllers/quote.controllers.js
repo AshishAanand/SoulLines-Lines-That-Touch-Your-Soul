@@ -8,6 +8,7 @@ const getQuotes = async (req, res) => {
 
         const quotes = await Quote.find()
             .populate("user", "name username")
+            .populate("comments.user", "name username")
             .sort({ createdAt: -1 });
 
         if (quotes.length === 0) {
@@ -73,13 +74,11 @@ const createQuote = async (req, res) => {
 
 const getQuoteById = async (req, res) => {
     try {
-        const quote = await Quote.findById(req.params.id);
-        if (!quote) {
-            return res.status(404).json({ message: "Quote not found" });
-        }
-        res.status(200).json({ message: "Quote retrieved successfully", quote: quote, status: 200 });
-    } catch (error) {
-        res.status(500).json({ message: "Server Error", error: error.message });
+        const quote = await Quote.findById(req.params.id).populate("user").populate("comments.user");
+        if (!quote) return res.status(404).json({ success: false, message: "Quote not found" });
+        res.json({ success: true, quote });
+    } catch (err) {
+        res.status(500).json({ success: false, message: err.message });
     }
 };
 
