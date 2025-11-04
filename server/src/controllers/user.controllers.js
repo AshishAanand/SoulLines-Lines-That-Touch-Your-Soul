@@ -119,6 +119,7 @@ const getUserProfile = async (req, res) => {
     }
 };
 
+
 const logoutUser = async (req, res) => {
     try {
         const authHeader = req.headers.authorization;
@@ -149,38 +150,4 @@ const logoutUser = async (req, res) => {
     }
 };
 
-/**
- * @desc follow user
- * @route POST /api/users/:id/follow
- * @access public
- */
-
-
-const followUser = async (req, res) => {
-    try {
-        const targetUser = await User.findById(req.params.id);
-        const currentUser = await User.findById(req.user.id);
-
-        if (!targetUser || !currentUser)
-            return res.status(404).json({ msg: "User not found" });
-
-        const alreadyFollowing = currentUser.following.includes(targetUser._id);
-
-        if (alreadyFollowing) {
-            currentUser.following.pull(targetUser._id);
-            targetUser.followers.pull(currentUser._id);
-        } else {
-            currentUser.following.push(targetUser._id);
-            targetUser.followers.push(currentUser._id);
-        }
-
-        await currentUser.save();
-        await targetUser.save();
-
-        res.json({ following: currentUser.following, followers: targetUser.followers });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-};
-
-export { registerUser, loginUser, getUserProfile, logoutUser, followUser };
+export { registerUser, loginUser, getUserProfile, logoutUser };

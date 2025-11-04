@@ -2,7 +2,7 @@
 
 import { Heart, MessageCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import API from "../services/api";
 
 const QuoteCard = ({ quote, userToken }) => {
@@ -14,7 +14,7 @@ const QuoteCard = ({ quote, userToken }) => {
   const [loading, setLoading] = useState(false);
   const [commentLoading, setCommentLoading] = useState(false);
 
-  // ❤️ Handle Like
+  // Handle Like
   const handleLike = async () => {
     if (!userToken) {
       alert("Please log in to like posts.");
@@ -34,7 +34,7 @@ const QuoteCard = ({ quote, userToken }) => {
     }
   };
 
-  // 💬 Fetch Comments
+  // Fetch Comments
   const fetchComments = async () => {
     try {
       setCommentLoading(true);
@@ -48,8 +48,7 @@ const QuoteCard = ({ quote, userToken }) => {
     }
   };
 
-
-  // 📝 Post Comment
+  // Post Comment
   const handlePostComment = async () => {
     if (!userToken) {
       alert("Please log in to comment.");
@@ -66,7 +65,7 @@ const QuoteCard = ({ quote, userToken }) => {
         { headers: { Authorization: `Bearer ${userToken}` } }
       );
 
-      // ✅ Refresh comments after posting
+      // Refresh comments after posting
       await fetchComments();
       setCommentText("");
     } catch (err) {
@@ -76,14 +75,15 @@ const QuoteCard = ({ quote, userToken }) => {
     }
   };
 
+  useEffect(() => {
+    fetchComments();
+  }, []);
 
-  // 🧭 Open Comment Drawer
+  // Open Comment Drawer
   const openComments = () => {
     setShowComments(true);
-    fetchComments();
   };
 
-  // 📅 Format date
   const formatDate = (date) =>
     new Date(date).toLocaleDateString("en-IN", {
       day: "2-digit",
@@ -91,12 +91,32 @@ const QuoteCard = ({ quote, userToken }) => {
       year: "numeric",
     });
 
-  const getUserInitials = (name) =>
-    name ? name.charAt(0).toUpperCase() : "?";
+  const getUserInitials = (name) => (name ? name.charAt(0).toUpperCase() : "?");
 
-  // 👤 Navigate to profile
-  const goToProfile = (id) => {
-    if (id) window.location.href = `/me/${id}`;
+  // ✅ Navigate to profile using username
+  const goToProfile = (username) => {
+    if (username) window.location.href = `/profile/${username}`;
+  };
+
+  const timeAgo = (date) => {
+    const now = new Date();
+    const past = new Date(date);
+    if (isNaN(past)) return "";
+
+    const diffInSeconds = Math.floor((now - past) / 1000);
+    if (diffInSeconds < 60) return `${diffInSeconds}s ago`;
+    const diffInMinutes = Math.floor(diffInSeconds / 60);
+    if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
+    const diffInHours = Math.floor(diffInMinutes / 60);
+    if (diffInHours < 24) return `${diffInHours}h ago`;
+    const diffInDays = Math.floor(diffInHours / 24);
+    if (diffInDays < 7) return `${diffInDays}d ago`;
+    const diffInWeeks = Math.floor(diffInDays / 7);
+    if (diffInWeeks < 4) return `${diffInWeeks}w ago`;
+    const diffInMonths = Math.floor(diffInDays / 30);
+    if (diffInMonths < 12) return `${diffInMonths}mo ago`;
+    const diffInYears = Math.floor(diffInDays / 365);
+    return `${diffInYears}y ago`;
   };
 
   return (
@@ -113,7 +133,7 @@ const QuoteCard = ({ quote, userToken }) => {
           <div className="flex items-center justify-between">
             <div
               className="flex items-center gap-3 min-w-0 cursor-pointer"
-              onClick={() => goToProfile(quote.user?._id)}
+              onClick={() => goToProfile(quote.user?.username)} // ✅ updated
             >
               <div
                 className="w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center text-white font-semibold text-lg shadow-md flex-shrink-0 transition-transform group-hover:scale-105"
@@ -154,7 +174,7 @@ const QuoteCard = ({ quote, userToken }) => {
             </p>
             <footer
               className="text-sm sm:text-base text-primary font-medium cursor-pointer hover:underline"
-              onClick={() => goToProfile(quote.user?._id)}
+              onClick={() => goToProfile(quote.user?.username)} // ✅ updated
             >
               — {quote.author || "Anonymous"}
             </footer>
@@ -170,10 +190,11 @@ const QuoteCard = ({ quote, userToken }) => {
                 className="group/btn flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors py-2 px-2 -mx-2 rounded-lg"
               >
                 <Heart
-                  className={`w-5 h-5 sm:w-6 sm:h-6 transition-all duration-200 ${liked
-                    ? "fill-primary text-primary scale-110"
-                    : "group-hover/btn:text-primary/80"
-                    }`}
+                  className={`w-5 h-5 sm:w-6 sm:h-6 transition-all duration-200 ${
+                    liked
+                      ? "fill-primary text-primary scale-110"
+                      : "group-hover/btn:text-primary/80"
+                  }`}
                 />
                 <span className="text-sm font-semibold">{likeCount}</span>
               </motion.button>
@@ -187,17 +208,6 @@ const QuoteCard = ({ quote, userToken }) => {
                 <MessageCircle className="w-5 h-5 sm:w-6 sm:h-6 group-hover/btn:text-accent/80 transition-colors" />
                 <span className="text-sm font-semibold">{comments.length}</span>
               </motion.button>
-
-              {/* Share */}
-              {/* <motion.button
-                whileTap={{ scale: 0.95 }}
-                className="group/btn flex items-center gap-2 text-muted-foreground hover:text-secondary transition-colors py-2 px-2 -mx-2 rounded-lg"
-              >
-                <Share2 className="w-5 h-5 sm:w-6 sm:h-6 group-hover/btn:text-secondary/80 transition-colors" />
-                <span className="text-sm font-semibold hidden sm:inline">
-                  Share
-                </span>
-              </motion.button> */}
             </div>
           </div>
         </div>
@@ -222,7 +232,6 @@ const QuoteCard = ({ quote, userToken }) => {
               exit={{ y: "100%" }}
               transition={{ type: "spring", stiffness: 300, damping: 25 }}
             >
-              {/* Header */}
               <div className="flex items-center justify-between p-4 sm:p-6 border-b border-border sticky top-0 bg-card rounded-t-3xl">
                 <h2 className="text-lg sm:text-xl font-semibold text-foreground">
                   Comments ({comments.length})
@@ -235,7 +244,6 @@ const QuoteCard = ({ quote, userToken }) => {
                 </button>
               </div>
 
-              {/* Input */}
               <div className="p-4 sm:p-6 border-b border-border space-y-3 sticky top-[68px] bg-card">
                 <div className="flex gap-2">
                   <input
@@ -262,39 +270,46 @@ const QuoteCard = ({ quote, userToken }) => {
                 )}
               </div>
 
-              {/* Comments List */}
-              <div className="p-4 sm:p-6 space-y-3 flex-1 overflow-y-auto">
+              <div className="p-4 sm:p-6 flex-1 overflow-y-auto space-y-4">
                 {commentLoading ? (
                   <div className="text-center py-8">
-                    <p className="text-muted-foreground text-sm">
+                    <p className="text-muted-foreground text-sm animate-pulse">
                       Loading comments...
                     </p>
                   </div>
                 ) : comments.length > 0 ? (
                   comments
-                    .filter((c) => c && typeof c === "object") // ensure comment exists
+                    .filter((c) => c && typeof c === "object")
                     .map((c) => {
-                      const user = c.user || {}; // fallback to empty object
+                      const user = c.user || {};
                       return (
                         <motion.div
-                          key={c.user?._id || Math.random()}
+                          key={c._id || Math.random()}
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
-                          className="p-4 border border-border rounded-xl bg-background/50 hover:bg-background transition-colors cursor-pointer"
-                          onClick={() => user._id && goToProfile(user._id)}
+                          className="group p-4 rounded-2xl border border-border/40 bg-background/70 hover:bg-background/90 transition-all duration-200"
                         >
-                          <p className="text-sm font-semibold text-primary mb-1 hover:underline">
-                            {user.name || "Unknown"}
-                          </p>
-                          <p className="text-foreground text-sm leading-relaxed">
+                          <div
+                            className="flex items-center gap-3 cursor-pointer"
+                            onClick={() => user.username && goToProfile(user.username)} // ✅ updated
+                          >
+                            <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-indigo-600 to-purple-600 flex items-center justify-center text-white text-sm font-semibold shadow-sm">
+                              {user.name ? user.name.charAt(0).toUpperCase() : "?"}
+                            </div>
+                            <p className="text-sm font-semibold text-indigo-300 group-hover:text-indigo-400 transition-colors">
+                              {user.name || "Unknown"}
+                            </p>
+                          </div>
+
+                          <p className="mt-3 text-foreground/90 text-sm leading-relaxed border-l-2 border-indigo-600/40 pl-3">
                             {c.text || ""}
                           </p>
                         </motion.div>
                       );
                     })
                 ) : (
-                  <div className="text-center py-8">
-                    <MessageCircle className="w-12 h-12 mx-auto text-muted-foreground mb-2 opacity-20" />
+                  <div className="text-center py-10">
+                    <MessageCircle className="w-12 h-12 mx-auto text-muted-foreground mb-3 opacity-25" />
                     <p className="text-muted-foreground text-sm">
                       No comments yet. Be the first!
                     </p>

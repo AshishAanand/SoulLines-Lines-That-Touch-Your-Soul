@@ -36,7 +36,7 @@ export const AuthProvider = ({ children }) => {
             const token = localStorage.getItem("token");
             if (!token) return setLoading(false);
             try {
-                const res = await API.get("/api/users/me", {
+                const res = await API.get("/api/users/profile", {
                     headers: { Authorization: `Bearer ${token}` },
                 });
                 setUser(res.data);

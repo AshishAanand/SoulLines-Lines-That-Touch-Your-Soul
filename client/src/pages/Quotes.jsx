@@ -50,13 +50,6 @@ const Quotes = () => {
             <QuoteCard key={quote._id} quote={quote} userToken={userToken} />
           ))}
         </div>
-
-        {/* Load More */}
-        <div className="mt-12 text-center">
-          <button className="px-8 py-3 border border-border rounded-full font-medium text-foreground hover:bg-muted/50 transition-colors">
-            Load More Quotes
-          </button>
-        </div>
       </div>
     </main>
   );

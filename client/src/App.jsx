@@ -12,28 +12,44 @@ import PrivateRoute from "./components/PrivateRoute.jsx";
 
 function App() {
   return (
-    // <div className="min-h-screen flex flex-col bg-gray-50 text-gray-800">
     <>
       <Navbar />
       <Routes>
+        {/* Public Routes */}
         <Route path="/" element={<Home />} />
         <Route path="/feed" element={<Quotes />} />
         <Route path="/about" element={<About />} />
-        <Route path="/add-quote" element={<PrivateRoute><AddQuote /></PrivateRoute>} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/login" element={<Login />} />
+
+        {/* Protected Routes */}
         <Route
-          path="/me"
+          path="/add-quote"
+          element={
+            <PrivateRoute>
+              <AddQuote />
+            </PrivateRoute>
+          }
+        />
+
+        {/* ✅ Own profile (logged-in user) */}
+        <Route
+          path="/profile"
           element={
             <PrivateRoute>
               <Profile />
             </PrivateRoute>
           }
         />
+
+        {/* ✅ Public user profile by username */}
+        <Route
+          path="/profile/:username"
+          element={<Profile />}
+        />
       </Routes>
       <Footer />
     </>
-    // </div>
   );
 }
 

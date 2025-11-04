@@ -1,161 +1,260 @@
 import React, { useEffect, useState } from "react";
+import { motion } from "framer-motion";
 import { useAuth } from "../context/AuthContext";
 import API from "../services/api";
+import { Quote, Users, UserPlus } from "lucide-react";
 
-const Avatar = ({ name = "User", color, size = 96 }) => {
-    const initials = (name || "User")
-        .split(" ")
-        .map((s) => s[0])
-        .slice(0, 2)
-        .join("")
-        .toUpperCase();
+const Avatar = ({ name = "User", color = "#6366F1", size = 96 }) => {
+  const initials = (name || "U")
+    .split(" ")
+    .map((s) => s[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
 
-    const style = {
+  return (
+    <div
+      style={{
         backgroundColor: color,
-        width: `${size}px`,
-        height: `${size}px`,
-        fontSize: `${size / 3.2}px`,
-    };
-
-    return (
-        <div
-            style={style}
-            className="rounded-full text-white font-extrabold flex items-center justify-center flex-shrink-0"
-            aria-hidden
-        >
-            {initials}
-        </div>
-    );
+        width: size,
+        height: size,
+        fontSize: size / 3.2,
+      }}
+      className="rounded-full text-white font-extrabold flex items-center justify-center shadow-md flex-shrink-0"
+    >
+      {initials}
+    </div>
+  );
 };
 
-const Stat = ({ label, value }) => (
-    <div className="flex flex-col items-center px-4">
-        <div className="text-lg font-semibold">{value}</div>
-        <div className="text-sm text-gray-500">{label}</div>
+const Stat = ({ label, value, icon: Icon }) => (
+  <div className="flex flex-col items-center justify-center rounded-xl bg-indigo-50/40 p-4 w-full sm:w-32">
+    <div className="flex items-center gap-2 text-indigo-600 font-semibold text-lg">
+      {Icon && <Icon className="w-5 h-5" />}
+      {value}
     </div>
+    <div className="text-sm text-gray-500">{label}</div>
+  </div>
 );
 
 const Profile = () => {
-    const { user } = useAuth();
-    const [userData, setUserData] = useState(null);
-    const [userQuotes, setUserQuotes] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
+  const { user } = useAuth();
+  const [userData, setUserData] = useState(null);
+  const [userQuotes, setUserQuotes] = useState([]);
+  const [followData, setFollowData] = useState({
+    followersCount: 0,
+    followingCount: 0,
+    isFollowing: false,
+  });
+  const [loading, setLoading] = useState(true);
+  const [followLoading, setFollowLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-    useEffect(() => {
-        if (!user) return;
+  // Fetch Profile + Quotes
+  useEffect(() => {
+    if (!user) return;
 
-        const fetchProfile = async () => {
-            setLoading(true);
-            setError(null);
+    const fetchProfile = async () => {
+      setLoading(true);
+      try {
+        const res = await API.get("/api/users/profile", {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        });
 
-            try {
-                // 1. Fetch current user
-                const res = await API.get('/api/users/me', {
-                    headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-                });
+        const userData = res.data.user || res.data;
+        setUserData(userData);
 
-                const userData = res.data.user || res.data; // safe fallback
-                setUserData(userData);
+        // Fetch quotes
+        const quotesRes = await API.get(`/api/quotes/${userData._id}/quotes`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        });
+        setUserQuotes(quotesRes.data.quotes || []);
 
-                console.log("User data:", userData);
-
-                // 2. Fetch user-specific quotes
-                const quotesRes = await API.get(`/api/quotes/${userData._id}/quotes`, {
-                    headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-                });
-                setUserQuotes(quotesRes.data.quotes || []);
-                console.log("User quotes:", quotesRes.data.quotes);
-            } catch (err) {
-                console.error(err);
-                setError("Failed to load profile data.");
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchProfile();
-    }, [user]);
-
-
-    if (loading) {
-        return <div className="min-h-screen flex items-center justify-center">Loading profile…</div>;
-    }
-
-    if (error) {
-        return (
-            <div className="min-h-screen flex flex-col items-center justify-center text-red-500">
-                {error}
-                <button
-                    onClick={() => window.location.reload()}
-                    className="mt-4 px-4 py-2 bg-indigo-600 text-white rounded-md"
-                >
-                    Retry
-                </button>
-            </div>
+        // Fetch follow data
+        const followRes = await API.get(
+          `/api/social/follow/${userData.username}/status`,
+          { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
         );
-    }
+        if (followRes.data.success) {
+          setFollowData({
+            followersCount: followRes.data.followersCount,
+            followingCount: followRes.data.followingCount,
+            isFollowing: followRes.data.isFollowing,
+          });
+        }
+      } catch (err) {
+        console.error(err);
+        setError("Failed to load profile data.");
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    if (!userData) {
-        return <div className="min-h-screen flex items-center justify-center">No profile data found.</div>;
-    }
+    fetchProfile();
+  }, [user]);
 
+  // Handle Follow/Unfollow
+  const handleFollowToggle = async () => {
+    if (!userData || followLoading) return;
+    setFollowLoading(true);
+
+    try {
+      const res = await API.post(
+        `/api/social/follow/${userData.username}`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        }
+      );
+
+      if (res.data.success) {
+        setFollowData({
+          followersCount: res.data.followersCount,
+          followingCount: res.data.followingCount,
+          isFollowing: res.data.isFollowing,
+        });
+      }
+    } catch (err) {
+      console.error("Follow toggle error:", err);
+    } finally {
+      setFollowLoading(false);
+    }
+  };
+
+  if (loading)
     return (
-        <div className="min-h-screen bg-gray-50 p-6">
-            <div className="max-w-4xl mx-auto space-y-6">
-                {/* Header */}
-                <header className="bg-white rounded-lg shadow-sm p-6">
-                    <div className="flex items-start gap-6">
-                        <Avatar name={userData.username} color="#6C5CE7" size={96} />
-                        <div className="flex-1">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <div className="text-2xl font-semibold">{userData.name}</div>
-                                    <div className="text-sm text-gray-500">@{userData.username}</div>
-                                </div>
-                                <div className="hidden sm:flex items-center gap-2">
-                                    <button className="bg-indigo-600 text-white px-4 py-2 rounded-md text-sm hover:bg-indigo-700">Edit Profile</button>
-                                    <button className="border border-gray-300 px-4 py-2 rounded-md text-sm text-gray-700 hover:bg-gray-50">Share</button>
-                                </div>
-                            </div>
-                            <p className="mt-4 text-gray-700">{userData.bio}</p>
-                            <div className="mt-4 flex items-center gap-6">
-                                <Stat label="Quotes" value={userQuotes?.length || 0} />
-                                <Stat label="Followers" value={userData.followers?.length || 0} />
-                                <Stat label="Following" value={userData.following?.length || 0} />
-                            </div>
-                        </div>
-                    </div>
-                </header>
-
-                {/* Quotes */}
-                <main className="bg-white rounded-lg shadow-sm p-6">
-                    <div className="flex items-center justify-between">
-                        <h3 className="text-lg font-semibold">Your Quotes</h3>
-                        <div className="text-sm text-gray-500">{userQuotes.length} total</div>
-                    </div>
-                    <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {userQuotes.length === 0 ? <p>No quotes yet.</p> : userQuotes.map((q) => (
-                            <article key={q._id} className="p-4 bg-gray-50 rounded-md border border-gray-100 flex flex-col justify-between">
-                                <p className="text-gray-800 italic">“{q.text}”</p>
-                                <div className="mt-4 flex items-center justify-between text-sm text-gray-500">
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-red-500">❤️</span>
-                                        <span>{q.likes}</span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <button className="text-indigo-600 hover:underline text-sm">Edit</button>
-                                        <button className="text-red-600 hover:underline text-sm">Delete</button>
-                                    </div>
-                                </div>
-                            </article>
-                        ))}
-                    </div>
-                </main>
-            </div>
-        </div>
+      <div className="min-h-screen flex items-center justify-center text-gray-500">
+        Loading profile…
+      </div>
     );
-}
 
+  if (error)
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center text-red-500">
+        {error}
+        <button
+          onClick={() => window.location.reload()}
+          className="mt-4 px-4 py-2 bg-indigo-600 text-white rounded-md shadow-md hover:bg-indigo-700 transition"
+        >
+          Retry
+        </button>
+      </div>
+    );
+
+  if (!userData)
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        No profile data found.
+      </div>
+    );
+
+  const isOwnProfile = user && user.username === userData.username;
+
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white py-8 px-4">
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="max-w-5xl mx-auto space-y-8"
+      >
+        {/* Header */}
+        <section className="bg-white/70 backdrop-blur-sm shadow-md rounded-2xl p-6 sm:p-8 border border-gray-100">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-6">
+            <Avatar name={userData.username} color="#6366F1" size={100} />
+
+            <div className="flex-1 space-y-2">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div>
+                  <h1 className="text-2xl sm:text-3xl font-semibold text-gray-800">
+                    {userData.name}
+                  </h1>
+                  <p className="text-gray-500">@{userData.username}</p>
+                </div>
+
+                {!isOwnProfile && (
+                  <motion.button
+                    whileTap={{ scale: 0.95 }}
+                    disabled={followLoading}
+                    onClick={handleFollowToggle}
+                    className={`px-5 py-2.5 rounded-lg text-sm font-medium shadow-sm transition-all duration-200 ${
+                      followData.isFollowing
+                        ? "bg-gray-200 text-gray-800 hover:bg-gray-300"
+                        : "bg-indigo-600 text-white hover:bg-indigo-700"
+                    }`}
+                  >
+                    {followLoading
+                      ? "Processing..."
+                      : followData.isFollowing
+                      ? "Following"
+                      : "Follow"}
+                  </motion.button>
+                )}
+              </div>
+
+              {/* Stats */}
+              <div className="mt-5 flex flex-wrap justify-start gap-4">
+                <Stat
+                  label="Quotes"
+                  value={userQuotes?.length || 0}
+                  icon={Quote}
+                />
+                <Stat
+                  label="Followers"
+                  value={followData.followersCount}
+                  icon={Users}
+                />
+                <Stat
+                  label="Following"
+                  value={followData.followingCount}
+                  icon={UserPlus}
+                />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Quotes Section */}
+        <section className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-sm p-6 sm:p-8 border border-gray-100">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-semibold text-gray-800">
+              {isOwnProfile ? "Your Quotes" : `${userData.name}'s Quotes`}
+            </h2>
+            <span className="text-sm text-gray-500">
+              {userQuotes.length} total
+            </span>
+          </div>
+
+          {userQuotes.length === 0 ? (
+            <p className="text-gray-500 text-center py-8">
+              {isOwnProfile
+                ? "You haven’t added any quotes yet."
+                : "This user hasn’t posted any quotes yet."}
+            </p>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              {userQuotes.map((q) => (
+                <motion.article
+                  key={q._id}
+                  whileHover={{ scale: 1.02 }}
+                  className="p-5 bg-gradient-to-tr from-gray-50 to-white rounded-xl border border-gray-200 shadow-sm transition-all hover:shadow-md"
+                >
+                  <p className="text-gray-800 italic leading-relaxed">
+                    “{q.text}”
+                  </p>
+                  <div className="mt-4 flex items-center justify-between text-sm text-gray-500">
+                    <div className="flex items-center gap-2">
+                      <span className="text-red-500">❤️</span>
+                      <span>{q.likes?.length || 0}</span>
+                    </div>
+                  </div>
+                </motion.article>
+              ))}
+            </div>
+          )}
+        </section>
+      </motion.div>
+    </div>
+  );
+};
 
 export default Profile;

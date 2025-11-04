@@ -80,41 +80,143 @@ const deleteComment = async (req, res) => {
 };
 
 // @desc   Follow / Unfollow a user
-// @route  POST /api/social/follow/:targetUserId
+// @route  POST /api/social/follow/:username
 
-const toggleFollow = async (req, res) => {
-    try {
-        const { targetUserId } = req.params;
-        const userId = req.user._id;
+/**
+ * POST /api/social/follow/:username
+ * Toggle follow/unfollow the user with given username
+ */
 
-        if (userId === targetUserId)
-            return res.status(400).json({ message: "You cannot follow yourself" });
+const toggleFollowByUsername = async (req, res) => {
+  try {
+    const followerId = req.user && req.user._id; // from protect middleware
+    const { username } = req.params;
 
-        const user = await User.findById(userId);
-        const targetUser = await User.findById(targetUserId);
+    if (!followerId)
+      return res.status(401).json({ success: false, message: "Not authorized" });
 
-        if (!targetUser) return res.status(404).json({ message: "User not found" });
+    // find target (followee) by username
+    const targetUser = await User.findOne({ username }).exec();
+    if (!targetUser)
+      return res.status(404).json({ success: false, message: "User not found" });
 
-        const alreadyFollowing = user.following.includes(targetUserId);
+    // cannot follow yourself
+    if (targetUser._id.equals(followerId))
+      return res
+        .status(400)
+        .json({ success: false, message: "You cannot follow yourself" });
 
-        if (alreadyFollowing) {
-            user.following.pull(targetUserId);
-            targetUser.followers.pull(userId);
-        } else {
-            user.following.push(targetUserId);
-            targetUser.followers.push(userId);
-        }
+    const follower = await User.findById(followerId).exec();
+    if (!follower)
+      return res
+        .status(404)
+        .json({ success: false, message: "Your user not found" });
 
-        await user.save();
-        await targetUser.save();
+    const alreadyFollowing = follower.following.some((id) =>
+      id.equals(targetUser._id)
+    );
 
-        res.status(200).json({
-            message: alreadyFollowing ? "Unfollowed user" : "Followed user",
-            followersCount: targetUser.followers.length, success: true
-        });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
+    if (alreadyFollowing) {
+      // --- Unfollow ---
+      await User.updateOne(
+        { _id: followerId },
+        { $pull: { following: targetUser._id } }
+      ).exec();
+      await User.updateOne(
+        { _id: targetUser._id },
+        { $pull: { followers: followerId } }
+      ).exec();
+
+      // fetch updated target counts
+      const updatedTarget = await User.findById(targetUser._id)
+        .select("followers following")
+        .exec();
+
+      const followersCount = (updatedTarget.followers || []).length;
+      const followingCount = (updatedTarget.following || []).length;
+
+      return res.json({
+        success: true,
+        message: "Unfollowed user",
+        followersCount,
+        followingCount,
+        isFollowing: false,
+      });
+    } else {
+      // --- Follow ---
+      await User.updateOne(
+        { _id: followerId, following: { $ne: targetUser._id } },
+        { $push: { following: targetUser._id } }
+      ).exec();
+      await User.updateOne(
+        { _id: targetUser._id, followers: { $ne: followerId } },
+        { $push: { followers: followerId } }
+      ).exec();
+
+      // fetch updated target counts
+      const updatedTarget = await User.findById(targetUser._id)
+        .select("followers following")
+        .exec();
+
+      const followersCount = (updatedTarget.followers || []).length;
+      const followingCount = (updatedTarget.following || []).length;
+
+      return res.json({
+        success: true,
+        message: "Followed user",
+        followersCount,
+        followingCount,
+        isFollowing: true,
+      });
     }
+  } catch (err) {
+    console.error("toggleFollowByUsername error:", err);
+    return res
+      .status(500)
+      .json({ success: false, message: err.message || "Server error" });
+  }
 };
 
-export { toggleLike, addComment, deleteComment, toggleFollow };
+/**
+ * GET /api/social/follow/:username/status
+ * Optional: get counts and whether logged-in user follows :username
+ */
+const getFollowStatusByUsername = async (req, res) => {
+  try {
+    const currentUserId = req.user && req.user._id;
+    const { username } = req.params;
+
+    const target = await User.findOne({ username })
+      .select("followers following name username _id")
+      .exec();
+
+    if (!target)
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+
+    const followersCount = (target.followers || []).length;
+    const followingCount = (target.following || []).length;
+    const isFollowing = currentUserId
+      ? (target.followers || []).some((id) => id.equals(currentUserId))
+      : false;
+
+    return res.json({
+      success: true,
+      user: {
+        _id: target._id,
+        name: target.name,
+        username: target.username,
+      },
+      followersCount,
+      followingCount,
+      isFollowing,
+    });
+  } catch (err) {
+    console.error("getFollowStatusByUsername error:", err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+
+export { toggleLike, addComment, deleteComment, toggleFollowByUsername, getFollowStatusByUsername };
