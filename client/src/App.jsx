@@ -45,7 +45,11 @@ function App() {
         {/* ✅ Public user profile by username */}
         <Route
           path="/profile/:username"
-          element={<Profile />}
+          element={
+            <PrivateRoute>
+              <Profile />
+            </PrivateRoute>
+          }
         />
       </Routes>
       <Footer />

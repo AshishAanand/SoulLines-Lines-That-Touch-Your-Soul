@@ -150,4 +150,25 @@ const logoutUser = async (req, res) => {
     }
 };
 
-export { registerUser, loginUser, getUserProfile, logoutUser };
+// @desc    Get user by username (public)
+// @route   GET /api/users/:username
+const getUserByUsername = async (req, res) => {
+  try {
+    const { username } = req.params;
+    const user = await User.findOne({ username })
+      .select("-password") // exclude sensitive fields
+      .exec();
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    res.json({ success: true, user });
+  } catch (err) {
+    console.error("getUserByUsername error:", err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+
+export { registerUser, loginUser, getUserProfile, logoutUser, getUserByUsername };

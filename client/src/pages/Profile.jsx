@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
 import { motion } from "framer-motion";
+import { Quote, Users, UserPlus } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import API from "../services/api";
-import { Quote, Users, UserPlus } from "lucide-react";
 
+// ------------------ Avatar ------------------
 const Avatar = ({ name = "User", color = "#6366F1", size = 96 }) => {
   const initials = (name || "U")
     .split(" ")
@@ -27,6 +29,7 @@ const Avatar = ({ name = "User", color = "#6366F1", size = 96 }) => {
   );
 };
 
+// ------------------ Stat Box ------------------
 const Stat = ({ label, value, icon: Icon }) => (
   <div className="flex flex-col items-center justify-center rounded-xl bg-indigo-50/40 p-4 w-full sm:w-32">
     <div className="flex items-center gap-2 text-indigo-600 font-semibold text-lg">
@@ -37,10 +40,13 @@ const Stat = ({ label, value, icon: Icon }) => (
   </div>
 );
 
+// ------------------ Profile ------------------
 const Profile = () => {
+  const { username } = useParams();
   const { user } = useAuth();
-  const [userData, setUserData] = useState(null);
-  const [userQuotes, setUserQuotes] = useState([]);
+
+  const [profileUser, setProfileUser] = useState(null);
+  const [quotes, setQuotes] = useState([]);
   const [followData, setFollowData] = useState({
     followersCount: 0,
     followingCount: 0,
@@ -50,69 +56,84 @@ const Profile = () => {
   const [followLoading, setFollowLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Fetch Profile + Quotes
-  useEffect(() => {
-    if (!user) return;
+  const isOwnProfile = !username || username === user?.username;
 
-    const fetchProfile = async () => {
+  // ------------------ Fetch Data ------------------
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!user) return;
       setLoading(true);
       try {
-        const res = await API.get("/api/users/profile", {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-        });
+        const token = localStorage.getItem("token");
 
-        const userData = res.data.user || res.data;
-        setUserData(userData);
+        // Fetch user profile (by username or self)
+        const userRes = isOwnProfile
+          ? await API.get("/api/users/profile", {
+              headers: { Authorization: `Bearer ${token}` },
+            })
+          : await API.get(`/api/users/${username}`, {
+              headers: { Authorization: `Bearer ${token}` },
+            });
+
+        const profileData = userRes.data.user || userRes.data;
+        setProfileUser(profileData);
 
         // Fetch quotes
-        const quotesRes = await API.get(`/api/quotes/${userData._id}/quotes`, {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-        });
-        setUserQuotes(quotesRes.data.quotes || []);
-
-        // Fetch follow data
-        const followRes = await API.get(
-          `/api/social/follow/${userData.username}/status`,
-          { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
+        const quoteRes = await API.get(
+          `/api/quotes/${profileData._id}/quotes`,
+          { headers: { Authorization: `Bearer ${token}` } }
         );
-        if (followRes.data.success) {
+        setQuotes(quoteRes.data.quotes || []);
+
+        // Fetch follow info (skip for self)
+        if (!isOwnProfile) {
+          const followRes = await API.get(
+            `/api/social/follow/${profileData.username}/status`,
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+          if (followRes.data.success) {
+            setFollowData({
+              followersCount: followRes.data.followersCount,
+              followingCount: followRes.data.followingCount,
+              isFollowing: followRes.data.isFollowing,
+            });
+          }
+        } else {
           setFollowData({
-            followersCount: followRes.data.followersCount,
-            followingCount: followRes.data.followingCount,
-            isFollowing: followRes.data.isFollowing,
+            followersCount: profileData.followers?.length || 0,
+            followingCount: profileData.following?.length || 0,
+            isFollowing: false,
           });
         }
       } catch (err) {
-        console.error(err);
+        console.error("Error fetching profile:", err);
         setError("Failed to load profile data.");
       } finally {
         setLoading(false);
       }
     };
 
-    fetchProfile();
-  }, [user]);
+    fetchData();
+  }, [username, user]);
 
-  // Handle Follow/Unfollow
+  // ------------------ Follow Toggle ------------------
   const handleFollowToggle = async () => {
-    if (!userData || followLoading) return;
+    if (followLoading || !profileUser) return;
     setFollowLoading(true);
 
     try {
       const res = await API.post(
-        `/api/social/follow/${userData.username}`,
+        `/api/social/follow/${profileUser.username}`,
         {},
-        {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-        }
+        { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
       );
 
       if (res.data.success) {
-        setFollowData({
+        setFollowData((prev) => ({
+          ...prev,
           followersCount: res.data.followersCount,
-          followingCount: res.data.followingCount,
           isFollowing: res.data.isFollowing,
-        });
+        }));
       }
     } catch (err) {
       console.error("Follow toggle error:", err);
@@ -121,6 +142,7 @@ const Profile = () => {
     }
   };
 
+  // ------------------ UI States ------------------
   if (loading)
     return (
       <div className="min-h-screen flex items-center justify-center text-gray-500">
@@ -141,15 +163,14 @@ const Profile = () => {
       </div>
     );
 
-  if (!userData)
+  if (!profileUser)
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        No profile data found.
+      <div className="min-h-screen flex items-center justify-center text-gray-500">
+        User not found.
       </div>
     );
 
-  const isOwnProfile = user && user.username === userData.username;
-
+  // ------------------ Main Render ------------------
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white py-8 px-4">
       <motion.div
@@ -157,18 +178,18 @@ const Profile = () => {
         animate={{ opacity: 1, y: 0 }}
         className="max-w-5xl mx-auto space-y-8"
       >
-        {/* Header */}
+        {/* ---------- Header ---------- */}
         <section className="bg-white/70 backdrop-blur-sm shadow-md rounded-2xl p-6 sm:p-8 border border-gray-100">
           <div className="flex flex-col sm:flex-row sm:items-center gap-6">
-            <Avatar name={userData.username} color="#6366F1" size={100} />
+            <Avatar name={profileUser.username} color="#6366F1" size={100} />
 
             <div className="flex-1 space-y-2">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div>
                   <h1 className="text-2xl sm:text-3xl font-semibold text-gray-800">
-                    {userData.name}
+                    {profileUser.name}
                   </h1>
-                  <p className="text-gray-500">@{userData.username}</p>
+                  <p className="text-gray-500">@{profileUser.username}</p>
                 </div>
 
                 {!isOwnProfile && (
@@ -191,13 +212,9 @@ const Profile = () => {
                 )}
               </div>
 
-              {/* Stats */}
+              {/* ---------- Stats ---------- */}
               <div className="mt-5 flex flex-wrap justify-start gap-4">
-                <Stat
-                  label="Quotes"
-                  value={userQuotes?.length || 0}
-                  icon={Quote}
-                />
+                <Stat label="Quotes" value={quotes?.length || 0} icon={Quote} />
                 <Stat
                   label="Followers"
                   value={followData.followersCount}
@@ -213,18 +230,18 @@ const Profile = () => {
           </div>
         </section>
 
-        {/* Quotes Section */}
+        {/* ---------- Quotes Section ---------- */}
         <section className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-sm p-6 sm:p-8 border border-gray-100">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-semibold text-gray-800">
-              {isOwnProfile ? "Your Quotes" : `${userData.name}'s Quotes`}
+              {isOwnProfile
+                ? "Your Quotes"
+                : `${profileUser.name}'s Quotes`}
             </h2>
-            <span className="text-sm text-gray-500">
-              {userQuotes.length} total
-            </span>
+            <span className="text-sm text-gray-500">{quotes.length} total</span>
           </div>
 
-          {userQuotes.length === 0 ? (
+          {quotes.length === 0 ? (
             <p className="text-gray-500 text-center py-8">
               {isOwnProfile
                 ? "You haven’t added any quotes yet."
@@ -232,7 +249,7 @@ const Profile = () => {
             </p>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-              {userQuotes.map((q) => (
+              {quotes.map((q) => (
                 <motion.article
                   key={q._id}
                   whileHover={{ scale: 1.02 }}
