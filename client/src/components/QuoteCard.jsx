@@ -111,12 +111,12 @@ const QuoteCard = ({ quote, userToken, onUpdateQuote, onDeleteQuote }) => {
     setShowComments(true);
   };
 
-  useEffect(() => {
-    if (showComments) {
-      const container = document.querySelector(".comments-container");
-      if (container) container.scrollTop = container.scrollHeight;
-    }
-  }, [showComments, comments]);
+  // useEffect(() => {
+  //   if (showComments) {
+  //     const container = document.querySelector(".comments-container");
+  //     if (container) container.scrollTop = container.scrollHeight;
+  //   }
+  // }, [showComments, comments]);
 
   const getUserInitials = (name) => (name ? name.charAt(0).toUpperCase() : "?");
 

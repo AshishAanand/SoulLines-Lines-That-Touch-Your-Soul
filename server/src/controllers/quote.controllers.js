@@ -126,7 +126,7 @@ const editQuote = async (req, res) => {
         }
 
         // fetching quote from DB
-        const quote = await Quote.findById(quoteId);
+        const quote = await Quote.findById(quoteId)
         if (!quote) {
             return res.status(404).json({ message: "Quote not found", status: 404 });
         }

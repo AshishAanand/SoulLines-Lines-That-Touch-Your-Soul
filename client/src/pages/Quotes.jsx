@@ -30,12 +30,16 @@ const Quotes = () => {
     fetchQuotes();
   }, []);
 
-  // ✅ Update a quote locally after edit
-  const handleUpdateQuote = (updatedQuote) => {
-    setQuotes((prev) =>
-      prev.map((q) => (q._id === updatedQuote._id ? updatedQuote : q))
-    );
-  };
+// ✅ Update a quote locally after edit (preserves user info)
+const handleUpdateQuote = (updatedQuote) => {
+  setQuotes((prev) =>
+    prev.map((q) =>
+      q._id === updatedQuote._id
+        ? { ...q, ...updatedQuote, user: q.user } // keep old user info
+        : q
+    )
+  );
+};
 
   // ✅ Delete a quote locally after deletion
   const handleDeleteQuote = (deletedQuoteId) => {
