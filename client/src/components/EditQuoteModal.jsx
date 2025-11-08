@@ -6,6 +6,7 @@ import { toast } from "sonner";
 const EditQuoteModal = ({ quote, onClose, onUpdate }) => {
   const [text, setText] = useState(quote.text);
   const [tag, setTag] = useState(quote.tag || "");
+  const [author, setAuthor] = useState(quote.author || "");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -21,7 +22,7 @@ const EditQuoteModal = ({ quote, onClose, onUpdate }) => {
     try {
       const res = await API.patch(
         `/api/quotes/${quote._id}`,
-        { text, tag },
+        { text, author, tag },
         {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         }
@@ -70,6 +71,18 @@ const EditQuoteModal = ({ quote, onClose, onUpdate }) => {
               className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none resize-none text-gray-700"
               placeholder="Edit your quote..."
             />
+
+            <div>
+              <label className="block text-sm font-medium mb-1 text-muted-foreground">Author</label>
+              <input
+                type="text"
+                className="w-full border border-border rounded-lg p-3 text-sm bg-background focus:ring-2 focus:ring-primary/40 outline-none"
+                value={author}
+                onChange={(e) => setAuthor(e.target.value)}
+                placeholder="Author (optional)"
+              />
+            </div>
+
             <input
               type="text"
               value={tag}
