@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Quote, Users, UserPlus } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
+import { Loader2 } from "lucide-react";
 import API from "../services/api";
 
 // ------------------ Avatar ------------------
@@ -69,11 +70,11 @@ const Profile = () => {
         // Fetch user profile (by username or self)
         const userRes = isOwnProfile
           ? await API.get("/api/users/profile", {
-              headers: { Authorization: `Bearer ${token}` },
-            })
+            headers: { Authorization: `Bearer ${token}` },
+          })
           : await API.get(`/api/users/${username}`, {
-              headers: { Authorization: `Bearer ${token}` },
-            });
+            headers: { Authorization: `Bearer ${token}` },
+          });
 
         const profileData = userRes.data.user || userRes.data;
         setProfileUser(profileData);
@@ -145,8 +146,9 @@ const Profile = () => {
   // ------------------ UI States ------------------
   if (loading)
     return (
-      <div className="min-h-screen flex items-center justify-center text-gray-500">
-        Loading profile…
+      <div className="min-h-[80vh] flex items-center justify-center text-gray-500">
+        <Loader2 className="animate-spin w-6 h-6 mr-2" />
+        Loading quotes...
       </div>
     );
 
@@ -197,17 +199,16 @@ const Profile = () => {
                     whileTap={{ scale: 0.95 }}
                     disabled={followLoading}
                     onClick={handleFollowToggle}
-                    className={`px-5 py-2.5 rounded-lg text-sm font-medium shadow-sm transition-all duration-200 ${
-                      followData.isFollowing
+                    className={`px-5 py-2.5 rounded-lg text-sm font-medium shadow-sm transition-all duration-200 ${followData.isFollowing
                         ? "bg-gray-200 text-gray-800 hover:bg-gray-300"
                         : "bg-indigo-600 text-white hover:bg-indigo-700"
-                    }`}
+                      }`}
                   >
                     {followLoading
                       ? "Processing..."
                       : followData.isFollowing
-                      ? "Following"
-                      : "Follow"}
+                        ? "Following"
+                        : "Follow"}
                   </motion.button>
                 )}
               </div>
