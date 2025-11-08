@@ -1,8 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import QuoteCard from '../components/QuoteCard.jsx';
 import API from '../services/api.js';
+import { useAuth } from "../context/AuthContext";
+import { Loader2 } from "lucide-react";
 
 const Quotes = () => {
+  const { user } = useAuth();
   const [quotes, setQuotes] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -27,9 +30,27 @@ const Quotes = () => {
     fetchQuotes();
   }, []);
 
-  if (loading) {
-    return <div className="text-center py-16 text-lg text-gray-600">Loading quotes...</div>;
+  // ✅ Update a quote locally after edit
+  const handleUpdateQuote = (updatedQuote) => {
+    setQuotes((prev) =>
+      prev.map((q) => (q._id === updatedQuote._id ? updatedQuote : q))
+    );
+  };
+
+  // ✅ Delete a quote locally after deletion
+  const handleDeleteQuote = (deletedQuoteId) => {
+    setQuotes((prev) => prev.filter((q) => q._id !== deletedQuoteId));
+  };
+
+  if (loading){
+    return (
+      <div className="min-h-[80vh] flex items-center justify-center text-gray-500">
+        <Loader2 className="animate-spin w-6 h-6 mr-2" />
+        Loading quotes...
+      </div>
+    );
   }
+
 
   if (quotes.length === 0) {
     return <div className="text-center py-16 text-lg text-gray-600">No quotes yet. Be the first to add one!</div>;
@@ -47,7 +68,14 @@ const Quotes = () => {
         {/* Quotes List */}
         <div className="space-y-6">
           {quotes.map((quote) => (
-            <QuoteCard key={quote._id} quote={quote} userToken={userToken} />
+            // <QuoteCard key={quote._id} quote={quote} userToken={userToken} />
+            <QuoteCard
+              key={quote._id}
+              quote={quote}
+              onUpdateQuote={handleUpdateQuote}
+              onDeleteQuote={handleDeleteQuote}
+              userToken={userToken}
+            />
           ))}
         </div>
       </div>

@@ -10,6 +10,8 @@ import Login from "./pages/Login.jsx";
 import Profile from "./pages/Profile.jsx";
 import PrivateRoute from "./components/PrivateRoute.jsx";
 
+import { Toaster } from "sonner";
+
 function App() {
   return (
     <>
@@ -53,6 +55,8 @@ function App() {
         />
       </Routes>
       <Footer />
+
+      <Toaster position="top-right" richColors />
     </>
   );
 }

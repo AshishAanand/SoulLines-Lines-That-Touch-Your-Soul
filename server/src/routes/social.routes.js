@@ -1,5 +1,5 @@
 import express from "express";
-import { toggleLike, addComment, deleteComment, toggleFollowByUsername, getFollowStatusByUsername } from "../controllers/social.controllers.js";
+import { toggleLike, addComment, deleteComment, toggleFollowByUsername, getFollowStatusByUsername, editComment } from "../controllers/social.controllers.js";
 // import  from "../middlewares/auth.middleware.js"; // if you already use it
 import protect from "../middlewares/auth.middleware.js";
 
@@ -16,5 +16,7 @@ router.delete("/comment/:quoteId/:commentId", protect, deleteComment);
 router.post("/follow/:username", protect, toggleFollowByUsername);
 // Optional: get follow status and counts for profile page
 router.get("/follow/:username/status", protect, getFollowStatusByUsername);
+
+router.patch("/comment/:quoteId/:commentId", protect, editComment); // route for editing comment
 
 export default router;

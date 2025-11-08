@@ -219,4 +219,37 @@ const getFollowStatusByUsername = async (req, res) => {
 };
 
 
-export { toggleLike, addComment, deleteComment, toggleFollowByUsername, getFollowStatusByUsername };
+// @desc Edit comment on a quote
+// @route PATCH /api/social/comment/:quoteId/:commentId
+
+const editComment = async (req, res) => {
+  try {
+    const { quoteId, commentId } = req.params;
+    const userId = req.user && (req.user._id || req.user.id);
+    const { text } = req.body;
+
+    if (!text || !String(text).trim())
+      return res.status(400).json({ success: false, message: "Comment cannot be empty" });
+
+    const quote = await Quote.findById(quoteId);
+    if (!quote) return res.status(404).json({ success: false, message: "Quote not found" });
+
+    const comment = quote.comments.id(commentId);
+    if (!comment) return res.status(404).json({ success: false, message: "Comment not found" });
+
+    if (String(comment.user) !== String(userId))
+      return res.status(403).json({ success: false, message: "Not authorized" });
+
+    comment.text = text.trim();
+    await quote.save();
+
+    res.json({ success: true, message: "Comment updated", comment });
+  } catch (err) {
+    console.error("editComment error:", err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+
+
+export { toggleLike, addComment, deleteComment, toggleFollowByUsername, getFollowStatusByUsername, editComment };

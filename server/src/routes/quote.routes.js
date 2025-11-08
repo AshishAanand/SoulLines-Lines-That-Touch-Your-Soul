@@ -1,6 +1,6 @@
 import e from "express";
 import protect from "../middlewares/auth.middleware.js";
-import { getQuotes, getQuoteById, deleteQuoteById, createQuote, getUserQuotes } from "../controllers/quote.controllers.js";
+import { getQuotes, getQuoteById, createQuote, getUserQuotes, editQuote, deleteQuote } from "../controllers/quote.controllers.js";
 
 const quoteRoutes = e.Router();
 
@@ -13,12 +13,14 @@ quoteRoutes
 quoteRoutes
     .route("/:id")
     .get(getQuoteById)
-    .delete(deleteQuoteById);
 
 // Get quotes of a specific user
 quoteRoutes.get("/:userId/quotes", getUserQuotes);
 
 // Create a new quote
 quoteRoutes.post("/", protect, createQuote);
+
+quoteRoutes.patch("/:quoteId", protect, editQuote);
+quoteRoutes.delete("/:quoteId", protect, deleteQuote);
 
 export default quoteRoutes;
